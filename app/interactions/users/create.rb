@@ -1,35 +1,44 @@
 class Users::Create < ActiveInteraction::Base
-  hash :params
-
+  # Декларативные параметры
+  string :surname
+  string :name
+  string :patronymic
+  string :email
+  integer :age
+  string :nationality
+  string :country
+  string :gender
+  array :interests, default: []
+  string :skills
+  
+  # Валидации
+  validates :surname, :name, :patronymic, :email, :age, :nationality, :country, :gender, presence: true
+  validates :email, uniqueness: true
+  validates :age, inclusion: { in: 1..90 }
+  validates :gender, inclusion: { in: ['male', 'female'] }
+  
   def execute
-    #don't do anything if params is empty
-    return unless params['name']
-    return unless params['patronymic']
-    return unless params['email']
-    return unless params['age']
-    return unless params['nationality']
-    return unless params['country']
-    return unless params['gender']
-    ##########
-    return if User.where(email: params['email'])
-    return if params['age'] <= 0 || params['age'] > 90
-    return if params['gender'] != 'male' or params['gender'] != female
-
-    user_full_name = "#{params['surname']} #{params['name']} #{params['patronymic']}"
-    user_params = params.except(:interests)
-    user = User.create(user_params.merge(user_full_name))
-
-    Intereset.where(name: params['interests']).each do |interest|
-      user.interests = user.interest + interest
-      user.save!
+    user = User.create!(
+      surname: surname,
+      name: name,
+      patronymic: patronymic,
+      email: email,
+      age: age,
+      nationality: nationality,
+      country: country,
+      gender: gender
+    )
+    
+    # Привязка интересов
+    interests.each do |interest_name|
+      interest = Interest.find_or_create_by(name: interest_name)
+      user.interests << interest
     end
+    
+    # Привязка навыков
+    user_skills = skills.split(',').map { |skill_name| Skill.find_or_create_by(name: skill_name.strip) }
+    user.skills << user_skills
 
-    user_skills = []
-    params['skills'].split(',').each do |skil|
-      skil = Skil.find(name: skil)
-      user_skills =  user_skills + [skil]
-    end
-    user.skills = user_skills
-    user.save
+    user
   end
 end
