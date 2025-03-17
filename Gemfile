@@ -9,4 +9,5 @@ gem 'active_interaction', '~> 5.5'
 
 group :development, :test do
   gem 'rspec-rails', '~> 7.1', '>= 7.1.1'
+  gem 'factory_bot_rails', '~> 6.4', '>= 6.4.4'
 end
